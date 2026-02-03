@@ -69,31 +69,3 @@ python3 ~/.claude/hooks/vibemon.py --reboot
 | PreCompact | packing |
 | Notification | notification |
 | Stop | done |
-
-## GitHub Pages
-
-This repository serves the `docs` folder via GitHub Pages at https://docs.vibemon.io
-
-### Setup
-
-1. Go to repository Settings
-2. Select "Pages" from the left menu
-3. Under "Source", select:
-   - Branch: `main`
-   - Folder: `/docs`
-4. Click "Save"
-
-### Custom Domain
-
-The `docs/CNAME` file sets the domain to `docs.vibemon.io`.
-
-DNS configuration:
-- CNAME record: `docs.vibemon.io` -> `nalbam.github.io`
-
-Or use GitHub's IP addresses (A records):
-```
-185.199.108.153
-185.199.109.153
-185.199.110.153
-185.199.111.153
-```
