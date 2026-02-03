@@ -4,9 +4,11 @@ VibeMon is a real-time status monitoring system for AI coding assistants. It dis
 
 ## Supported Platforms
 
-- **Claude Code** - Anthropic's CLI for Claude
-- **Kiro IDE** - Amazon's AI coding assistant
-- **OpenClaw** - Open source AI gateway
+| Platform | Character | Description |
+|----------|-----------|-------------|
+| **Claude Code** | clawd | Anthropic's CLI for Claude |
+| **Kiro IDE** | kiro | Amazon's AI coding assistant |
+| **OpenClaw** | claw | Open source AI gateway |
 
 ## Installation
 
@@ -33,22 +35,46 @@ After installation, edit `~/.vibemon/config.json` to configure your targets:
   "debug": false,
   "cache_path": "~/.vibemon/cache/statusline.json",
   "auto_launch": false,
-  "http_urls": ["http://127.0.0.1:19280"],
-  "serial_port": "/dev/cu.usbmodem*",
+  "http_urls": [],
+  "serial_port": null,
   "vibemon_url": "https://vibemon.io",
-  "vibemon_token": "your-token-here"
+  "vibemon_token": ""
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `debug` | Enable debug logging |
-| `cache_path` | Cache file path for project metadata |
-| `auto_launch` | Auto-launch Desktop App on session start |
-| `http_urls` | HTTP targets (Desktop App, ESP32 WiFi) |
-| `serial_port` | ESP32 USB serial port (wildcard supported) |
-| `vibemon_url` | VibeMon cloud API URL |
-| `vibemon_token` | VibeMon API access token (from dashboard) |
+| Field | Description | Example |
+|-------|-------------|---------|
+| `debug` | Enable debug logging | `true` |
+| `cache_path` | Cache file path for project metadata | `~/.vibemon/cache/statusline.json` |
+| `auto_launch` | Auto-launch Desktop App on session start | `true` |
+| `http_urls` | HTTP targets (Desktop App, ESP32 WiFi) | `["http://127.0.0.1:19280"]` |
+| `serial_port` | ESP32 USB serial port (wildcard supported) | `"/dev/cu.usbmodem*"` |
+| `vibemon_url` | VibeMon cloud API URL | `https://vibemon.io` |
+| `vibemon_token` | VibeMon API access token (from dashboard) | |
+
+### OpenClaw Configuration
+
+OpenClaw uses a plugin configuration at `~/.openclaw/openclaw.json`:
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "vibemon-bridge": {
+        "enabled": true,
+        "config": {
+          "projectName": "OpenClaw",
+          "character": "claw",
+          "httpEnabled": true,
+          "httpUrls": ["http://127.0.0.1:19280"],
+          "vibemonUrl": "https://vibemon.io",
+          "vibemonToken": ""
+        }
+      }
+    }
+  }
+}
+```
 
 ## CLI Commands
 
@@ -73,6 +99,8 @@ python3 ~/.claude/hooks/vibemon.py --reboot
 
 ## State Mapping
 
+### Claude Code
+
 | Event | State |
 |-------|-------|
 | SessionStart | start |
@@ -81,3 +109,16 @@ python3 ~/.claude/hooks/vibemon.py --reboot
 | PreCompact | packing |
 | Notification | notification |
 | Stop | done |
+
+In plan mode, `thinking` and `working` states become `planning`.
+
+### Kiro IDE
+
+| Event | State |
+|-------|-------|
+| agentSpawn | start |
+| promptSubmit | thinking |
+| fileCreated / fileEdited / fileDeleted | working |
+| preToolUse | working |
+| preCompact | packing |
+| agentStop | done |
