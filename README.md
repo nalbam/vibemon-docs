@@ -1,35 +1,99 @@
-# vibemon-docs
+# VibeMon Docs
 
-Vibemon 문서 사이트
+VibeMon is a real-time status monitoring system for AI coding assistants. It displays the current state (thinking, working, done) on ESP32 devices, Desktop App, or cloud service.
 
-## GitHub Pages 설정
+## Supported Platforms
 
-이 저장소는 `docs` 폴더를 GitHub Pages로 서빙합니다.
+- **Claude Code** - Anthropic's CLI for Claude
+- **Kiro IDE** - Amazon's AI coding assistant
+- **OpenClaw** - Open source AI gateway
 
-### 설정 방법
+## Installation
 
-1. GitHub 저장소 Settings로 이동
-2. 왼쪽 메뉴에서 "Pages" 선택
-3. "Source" 섹션에서:
-   - Branch: `main` (또는 현재 브랜치) 선택
-   - Folder: `/docs` 선택
-4. "Save" 클릭
+### Online Install (Recommended)
 
-### 커스텀 도메인 설정
+```bash
+curl -fsSL https://docs.vibemon.io/install.py | python3
+```
 
-`docs/CNAME` 파일에 `docs.vibemon.io` 도메인이 설정되어 있습니다.
+### Local Install
 
-DNS 설정에서 다음을 추가해야 합니다:
-- CNAME 레코드: `docs.vibemon.io` → `nalbam.github.io`
+```bash
+git clone https://github.com/nalbam/vibemon-docs.git
+cd vibemon-docs
+python3 docs/install.py
+```
 
-또는 GitHub IP 주소를 사용한 A 레코드:
+## Configuration
+
+After installation, edit `~/.vibemon/.env.local` to configure your targets:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `VIBEMON_HTTP_URLS` | HTTP targets (comma-separated) | `http://127.0.0.1:19280` |
+| `VIBEMON_SERIAL_PORT` | ESP32 USB serial port (wildcard supported) | `/dev/cu.usbmodem*` |
+| `VIBEMON_AUTO_LAUNCH` | Auto-launch Desktop App (`1` or `0`) | `0` |
+| `VIBEMON_URL` | VibeMon cloud API URL | `https://vibemon.io` |
+| `VIBEMON_TOKEN` | VibeMon API access token | (from dashboard) |
+| `VIBEMON_CACHE_PATH` | Cache file path | `~/.vibemon/cache/statusline.json` |
+| `DEBUG` | Enable debug logging (`1` or `0`) | `0` |
+
+## CLI Commands
+
+The hook script supports these commands:
+
+```bash
+# Lock monitor to current project
+python3 ~/.claude/hooks/vibemon.py --lock [project_name]
+
+# Unlock monitor
+python3 ~/.claude/hooks/vibemon.py --unlock
+
+# Get current status
+python3 ~/.claude/hooks/vibemon.py --status
+
+# Get/set lock mode (first-project, on-thinking)
+python3 ~/.claude/hooks/vibemon.py --lock-mode [mode]
+
+# Reboot ESP32 device
+python3 ~/.claude/hooks/vibemon.py --reboot
+```
+
+## State Mapping
+
+| Event | State |
+|-------|-------|
+| SessionStart | start |
+| UserPromptSubmit | thinking |
+| PreToolUse | working |
+| PreCompact | packing |
+| Notification | notification |
+| Stop | done |
+
+## GitHub Pages
+
+This repository serves the `docs` folder via GitHub Pages at https://docs.vibemon.io
+
+### Setup
+
+1. Go to repository Settings
+2. Select "Pages" from the left menu
+3. Under "Source", select:
+   - Branch: `main`
+   - Folder: `/docs`
+4. Click "Save"
+
+### Custom Domain
+
+The `docs/CNAME` file sets the domain to `docs.vibemon.io`.
+
+DNS configuration:
+- CNAME record: `docs.vibemon.io` -> `nalbam.github.io`
+
+Or use GitHub's IP addresses (A records):
 ```
 185.199.108.153
 185.199.109.153
 185.199.110.153
 185.199.111.153
 ```
-
-### 접속
-
-설정 완료 후 https://docs.vibemon.io 에서 접속 가능합니다.

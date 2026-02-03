@@ -55,7 +55,7 @@ OPENCLAW_FILES = [
 ]
 
 # Shared environment example file
-ENV_EXAMPLE_FILE = ".env.example"
+ENV_EXAMPLE_FILE = "env.example"
 
 
 def colored(text: str, color: str) -> str:
