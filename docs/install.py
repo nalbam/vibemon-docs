@@ -54,8 +54,8 @@ OPENCLAW_FILES = [
     "openclaw/extensions/index.mjs",
 ]
 
-# Shared environment example file
-ENV_EXAMPLE_FILE = "env.example"
+# Shared configuration example file
+CONFIG_EXAMPLE_FILE = "config.example.json"
 
 
 def colored(text: str, color: str) -> str:
@@ -83,6 +83,80 @@ def ask_yes_no(question: str, default: bool = True) -> bool:
         if answer in ("n", "no"):
             return False
         print("Please answer 'y' or 'n'")
+
+
+def mask_token(token: str) -> str:
+    """Mask a token, showing only first 4 and last 4 characters."""
+    if not token or len(token) <= 8:
+        return "****"
+    return f"{token[:4]}{'*' * (len(token) - 8)}{token[-4:]}"
+
+
+def configure_token(config: dict) -> dict:
+    """Configure VibeMon API token interactively."""
+    current_token = config.get("vibemon_token", "")
+
+    print(f"\n{colored('VibeMon API Token Configuration:', 'cyan')}")
+    print("  Get your token from: https://vibemon.io/dashboard")
+
+    if current_token:
+        print(f"  Current token: {colored(mask_token(current_token), 'yellow')}")
+        if ask_yes_no("  Change token?", default=False):
+            new_token = input("  Enter new token: ").strip()
+            if new_token:
+                config["vibemon_token"] = new_token
+                print(f"  {colored('✓', 'green')} Token updated")
+            else:
+                print(f"  {colored('!', 'yellow')} Token unchanged (empty input)")
+        else:
+            print(f"  {colored('✓', 'green')} Token unchanged")
+    else:
+        print(f"  No token configured.")
+        token = input("  Enter token (or press Enter to skip): ").strip()
+        if token:
+            config["vibemon_token"] = token
+            print(f"  {colored('✓', 'green')} Token saved")
+        else:
+            print(f"  {colored('!', 'yellow')} Token skipped")
+
+    return config
+
+
+def load_or_create_config(config_path: Path, example_content: str) -> dict:
+    """Load existing config or create from example."""
+    if config_path.exists():
+        try:
+            with open(config_path) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            pass
+
+    # Parse example content
+    try:
+        return json.loads(example_content)
+    except json.JSONDecodeError:
+        return {
+            "debug": False,
+            "cache_path": "~/.vibemon/cache/statusline.json",
+            "auto_launch": False,
+            "http_urls": [],
+            "serial_port": None,
+            "vibemon_url": "https://vibemon.io",
+            "vibemon_token": ""
+        }
+
+
+def save_config(config_path: Path, config: dict) -> bool:
+    """Save config to file."""
+    try:
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=2)
+            f.write("\n")
+        return True
+    except Exception as e:
+        print(f"  {colored('✗', 'red')} Failed to save config: {e}")
+        return False
 
 
 def download_file(url: str) -> str:
@@ -293,16 +367,24 @@ def install_claude(source: FileSource) -> bool:
         settings_file.write_text(json.dumps(new_settings, indent=2) + "\n")
         print(f"  {colored('✓', 'green')} settings.json created")
 
-    # Handle .env.local -> ~/.vibemon/.env.local (shared location)
-    env_content = source.get_file(ENV_EXAMPLE_FILE)
-    env_local = vibemon_home / ".env.local"
-    if not env_local.exists():
-        print()
-        if ask_yes_no("Create ~/.vibemon/.env.local from .env.example?"):
-            write_file(env_local, env_content, "~/.vibemon/.env.local")
+    # Handle config.json -> ~/.vibemon/config.json
+    config_content = source.get_file(CONFIG_EXAMPLE_FILE)
+    config_path = vibemon_home / "config.json"
+
+    print("\nConfiguring VibeMon:")
+    config = load_or_create_config(config_path, config_content)
+
+    if not config_path.exists():
+        print(f"  Creating new config at ~/.vibemon/config.json")
     else:
-        print()
-        write_file_with_diff(env_local, env_content, "~/.vibemon/.env.local")
+        print(f"  {colored('✓', 'green')} ~/.vibemon/config.json exists")
+
+    # Configure token interactively
+    config = configure_token(config)
+
+    # Save config
+    if save_config(config_path, config):
+        print(f"  {colored('✓', 'green')} ~/.vibemon/config.json saved")
 
     print(f"\n{colored('Claude Code installation complete!', 'green')}")
     return True
@@ -341,16 +423,24 @@ def install_kiro(source: FileSource) -> bool:
         content = source.get_file(f"kiro/hooks/{hook_file}")
         write_file_with_diff(kiro_home / "hooks" / hook_file, content, f"~/.kiro/hooks/{hook_file}")
 
-    # Handle .env.local -> ~/.vibemon/.env.local (shared location)
-    env_content = source.get_file(ENV_EXAMPLE_FILE)
-    env_local = vibemon_home / ".env.local"
-    if not env_local.exists():
-        print()
-        if ask_yes_no("Create ~/.vibemon/.env.local from .env.example?"):
-            write_file(env_local, env_content, "~/.vibemon/.env.local")
+    # Handle config.json -> ~/.vibemon/config.json
+    config_content = source.get_file(CONFIG_EXAMPLE_FILE)
+    config_path = vibemon_home / "config.json"
+
+    print("\nConfiguring VibeMon:")
+    config = load_or_create_config(config_path, config_content)
+
+    if not config_path.exists():
+        print(f"  Creating new config at ~/.vibemon/config.json")
     else:
-        print()
-        write_file_with_diff(env_local, env_content, "~/.vibemon/.env.local")
+        print(f"  {colored('✓', 'green')} ~/.vibemon/config.json exists")
+
+    # Configure token interactively
+    config = configure_token(config)
+
+    # Save config
+    if save_config(config_path, config):
+        print(f"  {colored('✓', 'green')} ~/.vibemon/config.json saved")
 
     print(f"\n{colored('Kiro IDE installation complete!', 'green')}")
     return True

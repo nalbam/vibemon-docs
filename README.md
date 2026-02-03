@@ -26,17 +26,29 @@ python3 docs/install.py
 
 ## Configuration
 
-After installation, edit `~/.vibemon/.env.local` to configure your targets:
+After installation, edit `~/.vibemon/config.json` to configure your targets:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VIBEMON_HTTP_URLS` | HTTP targets (comma-separated) | `http://127.0.0.1:19280` |
-| `VIBEMON_SERIAL_PORT` | ESP32 USB serial port (wildcard supported) | `/dev/cu.usbmodem*` |
-| `VIBEMON_AUTO_LAUNCH` | Auto-launch Desktop App (`1` or `0`) | `0` |
-| `VIBEMON_URL` | VibeMon cloud API URL | `https://vibemon.io` |
-| `VIBEMON_TOKEN` | VibeMon API access token | (from dashboard) |
-| `VIBEMON_CACHE_PATH` | Cache file path | `~/.vibemon/cache/statusline.json` |
-| `DEBUG` | Enable debug logging (`1` or `0`) | `0` |
+```json
+{
+  "debug": false,
+  "cache_path": "~/.vibemon/cache/statusline.json",
+  "auto_launch": false,
+  "http_urls": ["http://127.0.0.1:19280"],
+  "serial_port": "/dev/cu.usbmodem*",
+  "vibemon_url": "https://vibemon.io",
+  "vibemon_token": "your-token-here"
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `debug` | Enable debug logging |
+| `cache_path` | Cache file path for project metadata |
+| `auto_launch` | Auto-launch Desktop App on session start |
+| `http_urls` | HTTP targets (Desktop App, ESP32 WiFi) |
+| `serial_port` | ESP32 USB serial port (wildcard supported) |
+| `vibemon_url` | VibeMon cloud API URL |
+| `vibemon_token` | VibeMon API access token (from dashboard) |
 
 ## CLI Commands
 
