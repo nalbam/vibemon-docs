@@ -110,15 +110,26 @@ python3 ~/.claude/hooks/vibemon.py --reboot
 | Notification | notification |
 | Stop | done |
 
-In plan mode, `thinking` and `working` states become `planning`.
+**Plan Mode**: When Claude Code is in plan mode, `thinking` and `working` states automatically become `planning`.
 
 ### Kiro IDE
 
 | Event | State |
 |-------|-------|
 | agentSpawn | start |
-| promptSubmit | thinking |
+| promptSubmit / userPromptSubmit | thinking |
 | fileCreated / fileEdited / fileDeleted | working |
 | preToolUse | working |
 | preCompact | packing |
-| agentStop | done |
+| agentStop / stop | done |
+
+### OpenClaw
+
+| Event | State |
+|-------|-------|
+| gateway_start | start |
+| before_agent_start | thinking |
+| before_tool_call | working |
+| after_tool_call | thinking |
+| message_sent / agent_end | done (3s delay) |
+| session_end / gateway_stop | done |
