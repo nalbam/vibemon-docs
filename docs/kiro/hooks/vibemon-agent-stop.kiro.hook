@@ -1,0 +1,12 @@
+{
+  "name": "Vibe Monitor - Agent Stop",
+  "version": "1.0.0",
+  "description": "Send 'done' state to Vibe Monitor when agent execution completes",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "python3 ~/.vibemon/hook.py agentStop"
+  }
+}

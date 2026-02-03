@@ -1,0 +1,38 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibemon.py" }]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibemon.py" }]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibemon.py" }]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibemon.py" }]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibemon.py" }]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "python3 ~/.claude/hooks/vibemon.py" }]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "python3 ~/.claude/statusline.py"
+  }
+}

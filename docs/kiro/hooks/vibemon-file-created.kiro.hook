@@ -1,0 +1,13 @@
+{
+  "name": "Vibe Monitor - File Created",
+  "version": "1.0.0",
+  "description": "Send 'working' state to Vibe Monitor when files are created",
+  "when": {
+    "type": "fileCreated",
+    "patterns": ["**/*"]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "python3 ~/.vibemon/hook.py fileCreated"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "default",
+  "description": "Default agent with Vibe Monitor hooks",
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "python3",
+        "args": ["~/.vibemon/hook.py", "agentSpawn"]
+      }
+    ],
+    "userPromptSubmit": [
+      {
+        "command": "python3",
+        "args": ["~/.vibemon/hook.py", "promptSubmit"]
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "python3",
+        "args": ["~/.vibemon/hook.py", "preToolUse"]
+      }
+    ],
+    "stop": [
+      {
+        "command": "python3",
+        "args": ["~/.vibemon/hook.py", "agentStop"]
+      }
+    ]
+  }
+}
