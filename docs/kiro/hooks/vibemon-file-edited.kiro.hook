@@ -1,13 +1,13 @@
 {
-  "name": "Vibe Monitor - File Edited",
+  "name": "VibeMon - File Edited",
   "version": "1.0.0",
-  "description": "Send 'working' state to Vibe Monitor when files are edited",
+  "description": "Send 'working' state to VibeMon when files are edited",
   "when": {
     "type": "fileEdited",
     "patterns": ["**/*"]
   },
   "then": {
     "type": "runCommand",
-    "command": "python3 ~/.vibemon/hook.py fileEdited"
+    "command": "python3 ~/.kiro/hooks/vibemon.py fileEdited"
   }
 }

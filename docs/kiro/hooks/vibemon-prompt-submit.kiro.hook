@@ -1,12 +1,12 @@
 {
-  "name": "Vibe Monitor - Prompt Submit",
+  "name": "VibeMon - Prompt Submit",
   "version": "1.0.0",
-  "description": "Send 'thinking' state to Vibe Monitor when prompts are submitted",
+  "description": "Send 'thinking' state to VibeMon when prompts are submitted",
   "when": {
     "type": "promptSubmit"
   },
   "then": {
     "type": "runCommand",
-    "command": "python3 ~/.vibemon/hook.py promptSubmit"
+    "command": "python3 ~/.kiro/hooks/vibemon.py promptSubmit"
   }
 }

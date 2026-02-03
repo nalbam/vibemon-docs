@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 """
-Vibe Monitor Installation Script (Python Version)
+VibeMon Installation Script
 Installs Python script hooks (.py) and configuration for Claude Code, Kiro IDE, or OpenClaw.
-
-For Shell version, use: install.sh
 
 Usage:
   # Online install (recommended)
-  curl -fsSL https://nalbam.github.io/vibe-monitor/install.py | python3
+  curl -fsSL https://docs.vibemon.io/install.py | python3
 
   # Local install (from cloned repo)
-  python3 install.py
+  python3 docs/install.py
 """
 
 import difflib
@@ -31,27 +29,33 @@ def setup_tty_input():
             print("Please run this script directly: python3 install.py")
             sys.exit(1)
 
-# GitHub raw content base URL
-GITHUB_RAW_BASE = "https://raw.githubusercontent.com/nalbam/vibe-monitor/main"
+# VibeMon docs base URL (served via GitHub Pages)
+DOCS_BASE_URL = "https://docs.vibemon.io"
 
-# Files to download for each platform (Python version)
+# Files to download for each platform
 CLAUDE_FILES = [
-    "config/claude/statusline.py",
-    "config/claude/hooks/vibe-monitor.py",
-    "config/claude/settings.json",
-    "config/claude/skills/vibemon-lock/SKILL.md",
-    "config/claude/skills/vibemon-mode/SKILL.md",
+    "claude/hooks/vibemon.py",
+    "claude/statusline.py",
+    "claude/settings.json",
 ]
 
 KIRO_FILES = [
-    "config/kiro/hooks/vibe-monitor.py",
-    "config/kiro/agents/default.json",
+    "kiro/hooks/vibemon.py",
+    "kiro/agents/default.json",
+    "kiro/hooks/vibemon-prompt-submit.kiro.hook",
+    "kiro/hooks/vibemon-agent-stop.kiro.hook",
+    "kiro/hooks/vibemon-file-created.kiro.hook",
+    "kiro/hooks/vibemon-file-edited.kiro.hook",
+    "kiro/hooks/vibemon-file-deleted.kiro.hook",
 ]
 
 OPENCLAW_FILES = [
-    "config/openclaw/extensions/openclaw.plugin.json",
-    "config/openclaw/extensions/index.mjs",
+    "openclaw/extensions/openclaw.plugin.json",
+    "openclaw/extensions/index.mjs",
 ]
+
+# Shared environment example file
+ENV_EXAMPLE_FILE = ".env.example"
 
 
 def colored(text: str, color: str) -> str:
@@ -216,47 +220,42 @@ class FileSource:
 
     def __init__(self, local_dir: Path = None):
         self.local_dir = local_dir
-        self.is_online = local_dir is None or not (local_dir / "config").exists()
+        # Check if running from local docs directory (has claude/ and kiro/ subdirs)
+        self.is_online = local_dir is None or not (local_dir / "claude").exists()
 
     def get_file(self, path: str) -> str:
         """Get file content from local or remote source."""
         if self.is_online:
-            url = f"{GITHUB_RAW_BASE}/{path}"
+            url = f"{DOCS_BASE_URL}/{path}"
             return download_file(url)
         else:
             return (self.local_dir / path).read_text()
 
 
 def install_claude(source: FileSource) -> bool:
-    """Install Vibe Monitor for Claude Code (Python version)."""
-    print(f"\n{colored('Installing Vibe Monitor for Claude Code...', 'cyan')}\n")
+    """Install VibeMon for Claude Code."""
+    print(f"\n{colored('Installing VibeMon for Claude Code...', 'cyan')}\n")
 
     claude_home = Path.home() / ".claude"
+    vibemon_home = Path.home() / ".vibemon"
     claude_home.mkdir(parents=True, exist_ok=True)
+    vibemon_home.mkdir(parents=True, exist_ok=True)
     (claude_home / "hooks").mkdir(parents=True, exist_ok=True)
-    (claude_home / "skills").mkdir(parents=True, exist_ok=True)
 
     print("Copying files:")
 
-    # statusline.py
-    content = source.get_file("config/claude/statusline.py")
-    write_file_with_diff(claude_home / "statusline.py", content, "statusline.py", executable=True)
+    # statusline.py -> ~/.claude/statusline.py
+    content = source.get_file("claude/statusline.py")
+    write_file_with_diff(claude_home / "statusline.py", content, "~/.claude/statusline.py", executable=True)
 
-    # hooks/vibe-monitor.py
-    content = source.get_file("config/claude/hooks/vibe-monitor.py")
-    write_file_with_diff(claude_home / "hooks" / "vibe-monitor.py", content, "hooks/vibe-monitor.py", executable=True)
-
-    # skills
-    for skill in ["vibemon-lock", "vibemon-mode"]:
-        content = source.get_file(f"config/claude/skills/{skill}/SKILL.md")
-        skill_dir = claude_home / "skills" / skill
-        skill_dir.mkdir(parents=True, exist_ok=True)
-        write_file(skill_dir / "SKILL.md", content, f"skills/{skill}/SKILL.md")
+    # hooks/vibemon.py -> ~/.claude/hooks/vibemon.py
+    content = source.get_file("claude/hooks/vibemon.py")
+    write_file_with_diff(claude_home / "hooks" / "vibemon.py", content, "~/.claude/hooks/vibemon.py", executable=True)
 
     # Handle settings.json
     print("\nConfiguring settings.json:")
     settings_file = claude_home / "settings.json"
-    new_settings = json.loads(source.get_file("config/claude/settings.json"))
+    new_settings = json.loads(source.get_file("claude/settings.json"))
 
     if settings_file.exists():
         try:
@@ -294,50 +293,64 @@ def install_claude(source: FileSource) -> bool:
         settings_file.write_text(json.dumps(new_settings, indent=2) + "\n")
         print(f"  {colored('✓', 'green')} settings.json created")
 
-    # Handle .env.local
-    env_content = source.get_file("config/claude/.env.example")
-    env_local = claude_home / ".env.local"
+    # Handle .env.local -> ~/.vibemon/.env.local (shared location)
+    env_content = source.get_file(ENV_EXAMPLE_FILE)
+    env_local = vibemon_home / ".env.local"
     if not env_local.exists():
         print()
-        if ask_yes_no("Create .env.local from .env.example?"):
-            write_file(env_local, env_content, ".env.local")
+        if ask_yes_no("Create ~/.vibemon/.env.local from .env.example?"):
+            write_file(env_local, env_content, "~/.vibemon/.env.local")
     else:
         print()
-        write_file_with_diff(env_local, env_content, ".env.local")
+        write_file_with_diff(env_local, env_content, "~/.vibemon/.env.local")
 
     print(f"\n{colored('Claude Code installation complete!', 'green')}")
     return True
 
 
 def install_kiro(source: FileSource) -> bool:
-    """Install Vibe Monitor for Kiro IDE (Python version)."""
-    print(f"\n{colored('Installing Vibe Monitor for Kiro IDE...', 'cyan')}\n")
+    """Install VibeMon for Kiro IDE."""
+    print(f"\n{colored('Installing VibeMon for Kiro IDE...', 'cyan')}\n")
 
     kiro_home = Path.home() / ".kiro"
+    vibemon_home = Path.home() / ".vibemon"
     kiro_home.mkdir(parents=True, exist_ok=True)
+    vibemon_home.mkdir(parents=True, exist_ok=True)
     (kiro_home / "hooks").mkdir(parents=True, exist_ok=True)
     (kiro_home / "agents").mkdir(parents=True, exist_ok=True)
 
     print("Copying files:")
 
-    # vibe-monitor.py
-    content = source.get_file("config/kiro/hooks/vibe-monitor.py")
-    write_file_with_diff(kiro_home / "hooks" / "vibe-monitor.py", content, "hooks/vibe-monitor.py", executable=True)
+    # vibemon.py -> ~/.kiro/hooks/vibemon.py
+    content = source.get_file("kiro/hooks/vibemon.py")
+    write_file_with_diff(kiro_home / "hooks" / "vibemon.py", content, "~/.kiro/hooks/vibemon.py", executable=True)
 
-    # agents/default.json (Python version - uses python3 command)
-    content = source.get_file("config/kiro/agents/default.json")
-    write_file_with_diff(kiro_home / "agents" / "default.json", content, "agents/default.json")
+    # agents/default.json
+    content = source.get_file("kiro/agents/default.json")
+    write_file_with_diff(kiro_home / "agents" / "default.json", content, "~/.kiro/agents/default.json")
 
-    # Handle .env.local
-    env_content = source.get_file("config/kiro/.env.example")
-    env_local = kiro_home / ".env.local"
+    # .kiro.hook files
+    kiro_hook_files = [
+        "vibemon-prompt-submit.kiro.hook",
+        "vibemon-agent-stop.kiro.hook",
+        "vibemon-file-created.kiro.hook",
+        "vibemon-file-edited.kiro.hook",
+        "vibemon-file-deleted.kiro.hook",
+    ]
+    for hook_file in kiro_hook_files:
+        content = source.get_file(f"kiro/hooks/{hook_file}")
+        write_file_with_diff(kiro_home / "hooks" / hook_file, content, f"~/.kiro/hooks/{hook_file}")
+
+    # Handle .env.local -> ~/.vibemon/.env.local (shared location)
+    env_content = source.get_file(ENV_EXAMPLE_FILE)
+    env_local = vibemon_home / ".env.local"
     if not env_local.exists():
         print()
-        if ask_yes_no("Create .env.local from .env.example?"):
-            write_file(env_local, env_content, ".env.local")
+        if ask_yes_no("Create ~/.vibemon/.env.local from .env.example?"):
+            write_file(env_local, env_content, "~/.vibemon/.env.local")
     else:
         print()
-        write_file_with_diff(env_local, env_content, ".env.local")
+        write_file_with_diff(env_local, env_content, "~/.vibemon/.env.local")
 
     print(f"\n{colored('Kiro IDE installation complete!', 'green')}")
     return True
@@ -354,11 +367,11 @@ def install_openclaw(source: FileSource) -> bool:
     print("Copying plugin files:")
 
     # openclaw.plugin.json
-    content = source.get_file("config/openclaw/extensions/openclaw.plugin.json")
+    content = source.get_file("openclaw/extensions/openclaw.plugin.json")
     write_file_with_diff(plugin_dir / "openclaw.plugin.json", content, "openclaw.plugin.json")
 
     # index.mjs
-    content = source.get_file("config/openclaw/extensions/index.mjs")
+    content = source.get_file("openclaw/extensions/index.mjs")
     write_file_with_diff(plugin_dir / "index.mjs", content, "index.mjs")
 
     print(f"\n{colored('OpenClaw installation complete!', 'green')}")
